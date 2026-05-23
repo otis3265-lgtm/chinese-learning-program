@@ -1,0 +1,286 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>中文学习助手</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png?v=20260516-1" />
+    <link rel="apple-touch-icon" href="/assets/favicon.png?v=20260516-1" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#eefaff" />
+    <meta name="application-name" content="中文学习助手" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="中文学习助手" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="stylesheet" href="/styles.css?v=20260523-word-actions" />
+  </head>
+  <body>
+    <section id="authGate" class="auth-screen" hidden>
+      <form id="authForm" class="auth-card">
+        <div>
+          <p class="eyebrow">Chinese Learning</p>
+          <h1 id="authTitle">登录账号</h1>
+          <p class="muted">登录后保存课本内容、单词本、学习记录和 AI 对话配置。</p>
+        </div>
+        <label>
+          <span>用户名</span>
+          <input id="authUsername" type="text" autocomplete="username" placeholder="your-name" />
+        </label>
+        <label>
+          <span>密码</span>
+          <input id="authPassword" type="password" autocomplete="current-password" placeholder="至少 6 位" />
+        </label>
+        <button id="authSubmit" class="primary-button" type="submit">登录</button>
+        <button id="authToggle" class="ghost-button" type="button">注册新账号</button>
+        <p id="authMessage" class="status-text"></p>
+      </form>
+    </section>
+
+    <main id="appShell" class="app-shell" hidden>
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">AI Chinese Tutor</p>
+          <h1>中文学习助手</h1>
+        </div>
+        <button id="logoutButton" class="icon-text-button" type="button">退出</button>
+      </header>
+
+      <section id="todayView" class="view active">
+        <div class="hero-panel">
+          <div>
+            <p class="eyebrow">Today</p>
+            <h2>现代中文对话</h2>
+            <p id="bookSummary" class="muted">选择一课，AI 会用这课的新词和语法生成现代长对话。</p>
+          </div>
+        </div>
+
+        <article class="practice-card">
+          <div class="section-head">
+            <div>
+              <h3>对话内容</h3>
+              <p class="muted">默认中文，按需打开拼音或翻译。</p>
+            </div>
+            <div class="section-actions">
+              <button id="toggleDialoguePinyin" class="ghost-button small" type="button" aria-pressed="false">拼音</button>
+              <button id="toggleDialogueEnglish" class="ghost-button small" type="button" aria-pressed="false">翻译</button>
+              <button id="listenDaily" class="ghost-button small" type="button">朗读</button>
+            </div>
+          </div>
+          <div class="lesson-picker">
+            <span>选择课次</span>
+            <select id="dailyLessonSelect" hidden>
+              <option value="auto">自动随机一课</option>
+            </select>
+            <button id="dailyLessonButton" class="lesson-picker-button" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span>自动随机一课</span>
+            </button>
+            <div id="dailyLessonMenu" class="lesson-picker-menu" role="listbox" hidden></div>
+          </div>
+          <div class="daily-action-grid">
+            <button id="generateDailyInline" class="primary-button generate-inline-button" type="button">生成长对话</button>
+            <button id="photoDailyInline" class="ghost-button generate-inline-button" type="button">拍照生成</button>
+            <input id="dailyPhotoInput" type="file" accept="image/*" capture="environment" hidden />
+          </div>
+          <div id="dailyOutput" class="rich-output empty-state">生成的现代对话会显示在这里。</div>
+        </article>
+
+        <div class="quick-grid">
+          <button class="quick-card" type="button" data-quick="vocabulary">
+            <strong>课本单词</strong>
+            <span>Explain key vocabulary in English with pinyin.</span>
+          </button>
+          <button class="quick-card" type="button" data-quick="grammar">
+            <strong>语法讲解</strong>
+            <span>Explain the lesson grammar with daily examples.</span>
+          </button>
+          <button class="quick-card" type="button" data-quick="dialogue">
+            <strong>生活对话</strong>
+            <span>Practice a realistic daily conversation.</span>
+          </button>
+        </div>
+      </section>
+
+      <section id="chatView" class="view">
+        <div id="chatWelcome" class="chat-welcome">
+          <h2>AI 对话</h2>
+          <p class="muted">选中 AI 回复里的任意文字，会浮出朗读按钮。</p>
+          <div class="chat-starters" aria-label="快捷练习">
+            <button type="button" data-chat-prompt="Start a textbook-based Boya Chinese Elementary dialogue practice. Choose one saved lesson theme, use its vocabulary and grammar, ask one short question at a time, include pinyin, and gently correct my answer.">
+              <strong>课本对话</strong>
+              <span>按课文练一问一答</span>
+            </button>
+            <button type="button" data-chat-prompt="Quiz me on Boya Chinese Elementary vocabulary from the saved textbook pack. Show hanzi, pinyin, English meaning, one example sentence, then ask me to answer one by one.">
+              <strong>课本生词</strong>
+              <span>汉字、拼音、例句和复习</span>
+            </button>
+            <button type="button" data-chat-prompt="Teach one grammar point from Boya Chinese Elementary I-II. Explain in simple English, include pattern, textbook-style examples, pinyin, and three short exercises.">
+              <strong>语法练习</strong>
+              <span>解释、例句和小练习</span>
+            </button>
+          </div>
+        </div>
+        <div id="chatTranscript" class="chat-transcript"></div>
+        <form id="chatForm" class="chat-composer">
+          <button id="chatImageButton" class="chat-image-button" type="button" aria-label="插入图片">+</button>
+          <input id="chatImageInput" type="file" accept="image/*" multiple hidden />
+          <div id="chatAttachmentPreview" class="chat-attachment-preview" hidden></div>
+          <textarea id="chatInput" rows="1" placeholder="输入消息..."></textarea>
+          <button id="sendChat" class="chat-send-button" type="submit" aria-label="发送"></button>
+        </form>
+      </section>
+
+      <section id="wordsView" class="view">
+        <div class="section-head">
+          <div>
+            <h2>单词本</h2>
+            <p class="muted">保存需要复习的汉字、拼音、英文和例句。</p>
+          </div>
+        </div>
+        <form id="wordForm" class="stack-card">
+          <label><span>中文</span><input id="wordHanzi" type="text" placeholder="比如：预约" /></label>
+          <label><span>拼音</span><input id="wordPinyin" type="text" placeholder="yu yue" /></label>
+          <label><span>英文</span><input id="wordEnglish" type="text" placeholder="to make an appointment" /></label>
+          <label><span>例句</span><textarea id="wordExample" rows="3"></textarea></label>
+          <button class="primary-button" type="submit">保存单词</button>
+        </form>
+        <div class="word-filter" aria-label="单词筛选">
+          <button class="active" type="button" data-word-filter="all">全部</button>
+          <button type="button" data-word-filter="favorites">收藏</button>
+        </div>
+        <div id="wordList" class="word-list"></div>
+      </section>
+
+      <section id="writingView" class="view">
+        <div class="section-head">
+          <div>
+            <h2>写字</h2>
+            <p class="muted">单字点击用浏览器发音；播放全部用语音模型。</p>
+          </div>
+        </div>
+        <div class="stack-card">
+          <label>
+            <span>练习汉字</span>
+            <input id="hanziInput" type="text" value="永" />
+          </label>
+          <label class="range-label">
+            <span>写字速度 <strong id="hanziSpeedText">1.2x</strong></span>
+            <input id="hanziSpeed" type="range" min="0.4" max="2.5" step="0.1" value="1.2" />
+          </label>
+          <button id="playAllHanzi" class="ghost-button small play-all-hanzi-button" type="button">播放全部</button>
+        </div>
+        <p id="hanziStatus" class="status-text"></p>
+        <p id="hanziCount" class="status-text"></p>
+        <div id="hanziGrid" class="hanzi-grid"></div>
+      </section>
+
+      <section id="bookView" class="view">
+        <div class="section-head">
+          <div>
+            <h2>课本</h2>
+            <p class="muted">把教材内容贴进来，AI 会优先按这里的内容练习。</p>
+          </div>
+        </div>
+        <form id="textbookForm" class="stack-card">
+          <label><span>标题</span><input id="textbookTitle" type="text" placeholder="Boya Chinese Elementary" /></label>
+          <label><span>级别</span><input id="textbookLevel" type="text" placeholder="Elementary I-II" /></label>
+          <label><span>内容</span><textarea id="textbookContent" rows="12"></textarea></label>
+          <button class="primary-button" type="submit">保存课本</button>
+        </form>
+      </section>
+
+      <section id="recordsView" class="view">
+        <div class="section-head">
+          <div>
+            <h2>学习记录</h2>
+            <p class="muted">记录今天练了什么。</p>
+          </div>
+        </div>
+        <form id="recordForm" class="stack-card">
+          <label>
+            <span>类型</span>
+            <select id="recordType">
+              <option value="study">学习</option>
+              <option value="dialogue">对话</option>
+              <option value="writing">写字</option>
+            </select>
+          </label>
+          <label><span>标题</span><input id="recordTitle" type="text" placeholder="今天练习了点菜对话" /></label>
+          <label><span>得分/状态</span><input id="recordScore" type="text" placeholder="完成" /></label>
+          <label><span>备注</span><textarea id="recordDetail" rows="4"></textarea></label>
+          <button class="primary-button" type="submit">保存记录</button>
+        </form>
+        <div id="recordList" class="record-list"></div>
+      </section>
+
+      <section id="settingsView" class="view">
+        <div class="section-head">
+          <div>
+            <h2>AI 设置</h2>
+            <p class="muted">聊天模型和朗读模型可以分开使用。</p>
+          </div>
+        </div>
+        <form id="settingsForm" class="stack-card">
+          <label>
+            <span>聊天 API Key</span>
+            <input id="apiKeyInput" type="password" placeholder="sk-..." autocomplete="off" />
+          </label>
+          <label>
+            <span>聊天 API 地址</span>
+            <input id="baseUrlInput" type="url" placeholder="https://superaiapi.com/v1" />
+          </label>
+          <label>
+            <span>聊天模型</span>
+            <select id="chatModelInput">
+              <option value="gpt-5.4-mini">gpt-5.4-mini</option>
+              <option value="qwen-plus">qwen-plus</option>
+              <option value="qwen-turbo">qwen-turbo</option>
+              <option value="gpt-4o">gpt-4o</option>
+              <option value="gpt-4o-mini">gpt-4o-mini</option>
+            </select>
+          </label>
+          <label>
+            <span>朗读模型</span>
+            <select id="ttsModelInput">
+              <option value="qwen3-tts-flash">qwen3-tts-flash</option>
+              <option value="qwen3-tts-instruct-flash">qwen3-tts-instruct-flash</option>
+              <option value="qwen-tts-latest">qwen-tts-latest</option>
+            </select>
+          </label>
+          <label class="range-label">
+            <span>朗读语速 <strong id="ttsSpeedText">0.85x</strong></span>
+            <input id="ttsSpeedInput" type="range" min="0.5" max="2" step="0.05" value="0.85" />
+          </label>
+          <button class="primary-button" type="submit">保存设置</button>
+          <p id="settingsStatus" class="status-text"></p>
+        </form>
+      </section>
+
+      <section id="myView" class="view">
+        <div class="profile-panel">
+          <div>
+            <p class="eyebrow">Account</p>
+            <h2>我的</h2>
+            <p class="muted">Study tools and settings.</p>
+          </div>
+          <button id="myLogoutButton" class="icon-text-button logout-pill" type="button">退出</button>
+        </div>
+        <div class="my-grid">
+          <button class="my-card" type="button" data-my-tab="words"><strong>单词本</strong><span>查看生词</span></button>
+          <button class="my-card" type="button" data-my-tab="book"><strong>课本</strong><span>保存教材内容</span></button>
+          <button class="my-card" type="button" data-my-tab="records"><strong>记录</strong><span>学习记录</span></button>
+          <button class="my-card" type="button" data-my-tab="settings"><strong>AI 设置</strong><span>模型和语音</span></button>
+        </div>
+      </section>
+
+      <nav class="bottom-nav" aria-label="主导航">
+        <button class="active" type="button" data-tab="today">今日</button>
+        <button type="button" data-tab="chat">AI 对话</button>
+        <button type="button" data-tab="writing">写字</button>
+        <button type="button" data-tab="my">我的</button>
+      </nav>
+    </main>
+
+    <script src="/vendor/hanzi-writer/hanzi-writer.min.js?v=3.7.3"></script>
+    <script src="/app.js?v=20260523-word-actions"></script>
+  </body>
+</html>
