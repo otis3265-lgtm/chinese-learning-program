@@ -5,8 +5,11 @@ generated/
 ._*
 server.log
 codex-server.*.log
+huabuwan-local.*.log
+.android-downloads/
 .android-sdk/
+.gradle-dist/
 .jdk-21/
 android/.gradle/
+android/**/build/
 android/local.properties
-android/app/build/
