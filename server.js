@@ -16,9 +16,9 @@ const learningSeedPath = path.join(dataDir, 'learning.seed.json');
 const sessionCookieName = 'chinese_learning_session';
 const sessionTtlMs = 1000 * 60 * 60 * 24 * 30;
 const sessions = new Map();
-const defaultBaseUrl = process.env.OPENAI_BASE_URL || 'https://superaiapi.com/v1';
-const defaultChatModel = process.env.CHAT_MODEL || process.env.OPENAI_MODEL || 'gpt-5.4-mini';
-const defaultTtsModel = process.env.TTS_MODEL || 'gpt-4o-mini-tts';
+const defaultBaseUrl = process.env.OPENAI_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+const defaultChatModel = process.env.CHAT_MODEL || process.env.OPENAI_MODEL || 'qwen-plus';
+const defaultTtsModel = process.env.TTS_MODEL || 'qwen3-tts-flash';
 const defaultQwenTtsVoice = process.env.QWEN_TTS_VOICE || 'Cherry';
 const defaultConfiguredUsername = normalizeUsername(process.env.DEFAULT_CONFIGURED_USER || process.env.OTIS_DEFAULT_USER || 'otis');
 

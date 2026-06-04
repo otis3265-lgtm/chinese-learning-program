@@ -82,6 +82,7 @@ const recordList = $('#recordList');
 
 const settingsForm = $('#settingsForm');
 const apiKeyInput = $('#apiKeyInput');
+const chatProviderInput = $('#chatProviderInput');
 const baseUrlInput = $('#baseUrlInput');
 const chatModelInput = $('#chatModelInput');
 const ttsModelInput = $('#ttsModelInput');
@@ -109,6 +110,25 @@ let pendingChatImages = [];
 let deferredInstallPrompt = null;
 const wordRandomSeed = Math.random();
 let activeWordFilter = 'all';
+
+const chatProviderPresets = {
+  'dashscope-cn': {
+    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    models: ['qwen-plus', 'qwen-max', 'qwen-turbo-latest', 'qwen-turbo', 'qwen3.6-plus', 'qwen3.6-flash'],
+  },
+  'dashscope-intl': {
+    baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+    models: ['qwen-plus', 'qwen-max', 'qwen-turbo-latest', 'qwen-turbo', 'qwen3.6-plus', 'qwen3.6-flash'],
+  },
+  superai: {
+    baseUrl: 'https://superaiapi.com/v1',
+    models: ['gpt-5.4-mini', 'gpt-4o', 'gpt-4o-mini', 'qwen-plus', 'qwen-turbo'],
+  },
+  custom: {
+    baseUrl: '',
+    models: ['qwen-plus', 'qwen-max', 'gpt-5.4-mini', 'gpt-4o', 'gpt-4o-mini'],
+  },
+};
 
 const fallbackHanziPinyin = {
   '\u6c38': 'yong3',
@@ -1026,6 +1046,30 @@ function setSelectValue(select, value) {
   select.value = normalized || select.options[0]?.value || '';
 }
 
+function detectChatProvider(baseUrl = '') {
+  const normalized = String(baseUrl || '').trim();
+  if (/dashscope\.aliyuncs\.com/i.test(normalized)) return 'dashscope-cn';
+  if (/dashscope-intl\.aliyuncs\.com/i.test(normalized)) return 'dashscope-intl';
+  if (/superaiapi\.com/i.test(normalized)) return 'superai';
+  return 'custom';
+}
+
+function setChatModelOptions(provider, selectedModel) {
+  if (!chatModelInput) return;
+  const preset = chatProviderPresets[provider] || chatProviderPresets.custom;
+  const current = String(selectedModel || chatModelInput.value || '').trim();
+  const models = [...new Set([...preset.models, current].filter(Boolean))];
+  chatModelInput.replaceChildren(...models.map((model) => new Option(model, model)));
+  setSelectValue(chatModelInput, current || preset.models[0]);
+}
+
+function applyChatProviderPreset(provider, options = {}) {
+  const preset = chatProviderPresets[provider] || chatProviderPresets.custom;
+  if (chatProviderInput) chatProviderInput.value = provider;
+  if (baseUrlInput && preset.baseUrl && !options.keepBaseUrl) baseUrlInput.value = preset.baseUrl;
+  setChatModelOptions(provider, options.selectedModel);
+}
+
 function setTtsSpeed(value) {
   currentTtsSpeed = Math.min(2, Math.max(0.5, Number(value || 0.85)));
   if (ttsSpeedInput) ttsSpeedInput.value = String(currentTtsSpeed);
@@ -1036,8 +1080,11 @@ async function loadAppData() {
   health = await requestJson('/api/health');
   const data = await requestJson('/api/learning');
   learning = data.learning;
-  baseUrlInput.value = health.baseUrl || 'https://superaiapi.com/v1';
-  setSelectValue(chatModelInput, health.chatModel || 'gpt-5.4-mini');
+  baseUrlInput.value = health.baseUrl || chatProviderPresets['dashscope-cn'].baseUrl;
+  applyChatProviderPreset(detectChatProvider(baseUrlInput.value), {
+    keepBaseUrl: true,
+    selectedModel: health.chatModel || 'qwen-plus',
+  });
   setSelectValue(ttsModelInput, health.ttsModel || 'qwen3-tts-flash');
   currentTtsModel = ttsModelInput?.value || health.ttsModel || 'qwen3-tts-flash';
   setTtsSpeed(health.ttsSpeed || 0.85);
@@ -1252,6 +1299,16 @@ settingsForm?.addEventListener('submit', async (event) => {
   } catch (error) {
     setStatus(settingsStatus, error.message, true);
   }
+});
+chatProviderInput?.addEventListener('change', () => {
+  applyChatProviderPreset(chatProviderInput.value);
+});
+baseUrlInput?.addEventListener('change', () => {
+  const provider = detectChatProvider(baseUrlInput.value);
+  applyChatProviderPreset(provider, {
+    keepBaseUrl: true,
+    selectedModel: chatModelInput?.value,
+  });
 });
 ttsModelInput?.addEventListener('change', () => {
   currentTtsModel = ttsModelInput.value || currentTtsModel;
