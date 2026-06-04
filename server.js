@@ -12,6 +12,7 @@ const port = Number(process.env.PORT || 3333);
 const dataDir = path.join(__dirname, 'generated');
 const usersPath = path.join(dataDir, 'users.json');
 const learningPath = path.join(dataDir, 'learning.json');
+const learningSeedPath = path.join(dataDir, 'learning.seed.json');
 const sessionCookieName = 'chinese_learning_session';
 const sessionTtlMs = 1000 * 60 * 60 * 24 * 30;
 const sessions = new Map();
@@ -239,8 +240,34 @@ async function writeAllLearningData(data) {
   await fs.writeFile(learningPath, JSON.stringify(data, null, 2), 'utf8');
 }
 
+async function readSeedLearningData() {
+  try {
+    const text = await fs.readFile(learningSeedPath, 'utf8');
+    const seed = JSON.parse(text.replace(/^\uFEFF/, ''));
+    return seed && typeof seed === 'object' ? seed : null;
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
+
 async function readLearningData(userId) {
   const allData = await readAllLearningData();
+  if (!allData[userId]) {
+    const seed = await readSeedLearningData();
+    if (seed) {
+      const seededLearning = {
+        ...emptyLearningData(userId),
+        ...seed,
+        userId,
+        records: [],
+        updatedAt: new Date().toISOString(),
+      };
+      allData[userId] = seededLearning;
+      await writeAllLearningData(allData);
+      return seededLearning;
+    }
+  }
   return {
     ...emptyLearningData(userId),
     ...(allData[userId] || {}),
