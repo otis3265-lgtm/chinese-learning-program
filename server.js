@@ -24,7 +24,7 @@ const defaultQwenTtsVoice = process.env.QWEN_TTS_VOICE || 'Cherry';
 const defaultConfiguredUsername = normalizeUsername(process.env.DEFAULT_CONFIGURED_USER || process.env.OTIS_DEFAULT_USER || 'otis');
 
 app.set('trust proxy', true);
-app.use(express.json({ limit: '8mb' }));
+app.use(express.json({ limit: '16mb' }));
 app.use(express.static(path.join(__dirname, 'public'), {
   etag: false,
   lastModified: false,

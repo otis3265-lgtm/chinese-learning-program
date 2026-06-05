@@ -1271,7 +1271,7 @@ chatImageInput?.addEventListener('change', async () => {
   const images = await Promise.all(files.map(async (file) => ({
     name: file.name,
     type: file.type,
-    dataUrl: await readChatImage(file),
+    dataUrl: await readDialoguePhoto(file),
   })));
   pendingChatImages = [...pendingChatImages, ...images].slice(0, 6);
   chatImageInput.value = '';
