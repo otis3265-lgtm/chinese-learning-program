@@ -85,6 +85,9 @@ const apiKeyInput = $('#apiKeyInput');
 const chatProviderInput = $('#chatProviderInput');
 const baseUrlInput = $('#baseUrlInput');
 const chatModelInput = $('#chatModelInput');
+const ttsApiKeyInput = $('#ttsApiKeyInput');
+const ttsProviderInput = $('#ttsProviderInput');
+const ttsBaseUrlInput = $('#ttsBaseUrlInput');
 const ttsModelInput = $('#ttsModelInput');
 const ttsSpeedInput = $('#ttsSpeedInput');
 const ttsSpeedText = $('#ttsSpeedText');
@@ -127,6 +130,21 @@ const chatProviderPresets = {
   custom: {
     baseUrl: '',
     models: ['qwen-plus', 'qwen-max', 'gpt-5.4-mini', 'gpt-4o', 'gpt-4o-mini'],
+  },
+};
+
+const ttsProviderPresets = {
+  'dashscope-intl': {
+    baseUrl: 'https://dashscope-intl.aliyuncs.com',
+    models: ['qwen3-tts-flash', 'qwen3-tts-instruct-flash', 'qwen-tts-latest'],
+  },
+  'dashscope-cn': {
+    baseUrl: 'https://dashscope.aliyuncs.com',
+    models: ['qwen3-tts-flash', 'qwen3-tts-instruct-flash', 'qwen-tts-latest'],
+  },
+  custom: {
+    baseUrl: '',
+    models: ['qwen3-tts-flash', 'qwen3-tts-instruct-flash', 'qwen-tts-latest', 'gpt-4o-mini-tts', 'tts-1'],
   },
 };
 
@@ -1070,6 +1088,29 @@ function applyChatProviderPreset(provider, options = {}) {
   setChatModelOptions(provider, options.selectedModel);
 }
 
+function detectTtsProvider(baseUrl = '') {
+  const normalized = String(baseUrl || '').trim();
+  if (/dashscope-intl\.aliyuncs\.com/i.test(normalized)) return 'dashscope-intl';
+  if (/dashscope\.aliyuncs\.com/i.test(normalized)) return 'dashscope-cn';
+  return 'custom';
+}
+
+function setTtsModelOptions(provider, selectedModel) {
+  if (!ttsModelInput) return;
+  const preset = ttsProviderPresets[provider] || ttsProviderPresets.custom;
+  const current = String(selectedModel || ttsModelInput.value || '').trim();
+  const models = [...new Set([...preset.models, current].filter(Boolean))];
+  ttsModelInput.replaceChildren(...models.map((model) => new Option(model, model)));
+  setSelectValue(ttsModelInput, current || preset.models[0]);
+}
+
+function applyTtsProviderPreset(provider, options = {}) {
+  const preset = ttsProviderPresets[provider] || ttsProviderPresets.custom;
+  if (ttsProviderInput) ttsProviderInput.value = provider;
+  if (ttsBaseUrlInput && preset.baseUrl && !options.keepBaseUrl) ttsBaseUrlInput.value = preset.baseUrl;
+  setTtsModelOptions(provider, options.selectedModel);
+}
+
 function setTtsSpeed(value) {
   currentTtsSpeed = Math.min(2, Math.max(0.5, Number(value || 0.85)));
   if (ttsSpeedInput) ttsSpeedInput.value = String(currentTtsSpeed);
@@ -1080,12 +1121,16 @@ async function loadAppData() {
   health = await requestJson('/api/health');
   const data = await requestJson('/api/learning');
   learning = data.learning;
-  baseUrlInput.value = health.baseUrl || chatProviderPresets['dashscope-cn'].baseUrl;
+  baseUrlInput.value = health.baseUrl || chatProviderPresets.superai.baseUrl;
   applyChatProviderPreset(detectChatProvider(baseUrlInput.value), {
     keepBaseUrl: true,
-    selectedModel: health.chatModel || 'qwen-plus',
+    selectedModel: health.chatModel || 'gpt-5.4-mini',
   });
-  setSelectValue(ttsModelInput, health.ttsModel || 'qwen3-tts-flash');
+  ttsBaseUrlInput.value = health.ttsBaseUrl || ttsProviderPresets['dashscope-intl'].baseUrl;
+  applyTtsProviderPreset(detectTtsProvider(ttsBaseUrlInput.value), {
+    keepBaseUrl: true,
+    selectedModel: health.ttsModel || 'qwen3-tts-flash',
+  });
   currentTtsModel = ttsModelInput?.value || health.ttsModel || 'qwen3-tts-flash';
   setTtsSpeed(health.ttsSpeed || 0.85);
   renderLearning();
@@ -1287,6 +1332,8 @@ settingsForm?.addEventListener('submit', async (event) => {
         chatApiKey: apiKeyInput.value,
         baseUrl: baseUrlInput.value,
         chatModel: chatModelInput.value,
+        ttsApiKey: ttsApiKeyInput?.value || '',
+        ttsBaseUrl: ttsBaseUrlInput?.value || '',
         ttsModel: ttsModelInput?.value || currentTtsModel,
         ttsSpeed: currentTtsSpeed,
       }),
@@ -1295,6 +1342,7 @@ settingsForm?.addEventListener('submit', async (event) => {
     currentTtsModel = health.ttsModel || ttsModelInput?.value || 'qwen3-tts-flash';
     setTtsSpeed(health.ttsSpeed || currentTtsSpeed);
     apiKeyInput.value = '';
+    if (ttsApiKeyInput) ttsApiKeyInput.value = '';
     setStatus(settingsStatus, 'Saved.');
   } catch (error) {
     setStatus(settingsStatus, error.message, true);
@@ -1308,6 +1356,17 @@ baseUrlInput?.addEventListener('change', () => {
   applyChatProviderPreset(provider, {
     keepBaseUrl: true,
     selectedModel: chatModelInput?.value,
+  });
+});
+ttsProviderInput?.addEventListener('change', () => {
+  applyTtsProviderPreset(ttsProviderInput.value);
+  currentTtsModel = ttsModelInput?.value || currentTtsModel;
+});
+ttsBaseUrlInput?.addEventListener('change', () => {
+  const provider = detectTtsProvider(ttsBaseUrlInput.value);
+  applyTtsProviderPreset(provider, {
+    keepBaseUrl: true,
+    selectedModel: ttsModelInput?.value,
   });
 });
 ttsModelInput?.addEventListener('change', () => {

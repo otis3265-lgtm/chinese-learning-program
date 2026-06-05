@@ -227,29 +227,45 @@
           <label>
             <span>聊天服务</span>
             <select id="chatProviderInput">
+              <option value="superai">SuperAI</option>
               <option value="dashscope-cn">千问 / 阿里云百炼（国内）</option>
               <option value="dashscope-intl">千问 / Alibaba Cloud（国际）</option>
-              <option value="superai">SuperAI</option>
               <option value="custom">自定义 OpenAI 兼容接口</option>
             </select>
           </label>
           <label>
             <span>聊天 API 地址</span>
-            <input id="baseUrlInput" type="url" placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1" />
+            <input id="baseUrlInput" type="url" placeholder="https://superaiapi.com/v1" />
           </label>
           <label>
             <span>聊天模型</span>
             <select id="chatModelInput">
+              <option value="gpt-5.4-mini">gpt-5.4-mini</option>
+              <option value="gpt-4o">gpt-4o</option>
+              <option value="gpt-4o-mini">gpt-4o-mini</option>
               <option value="qwen-plus">qwen-plus</option>
               <option value="qwen-max">qwen-max</option>
               <option value="qwen-turbo-latest">qwen-turbo-latest</option>
               <option value="qwen-turbo">qwen-turbo</option>
               <option value="qwen3.6-plus">qwen3.6-plus</option>
               <option value="qwen3.6-flash">qwen3.6-flash</option>
-              <option value="gpt-5.4-mini">gpt-5.4-mini</option>
-              <option value="gpt-4o">gpt-4o</option>
-              <option value="gpt-4o-mini">gpt-4o-mini</option>
             </select>
+          </label>
+          <label>
+            <span>朗读 API Key</span>
+            <input id="ttsApiKeyInput" type="password" placeholder="sk-..." autocomplete="off" />
+          </label>
+          <label>
+            <span>朗读服务</span>
+            <select id="ttsProviderInput">
+              <option value="dashscope-intl">千问 / Alibaba Cloud 新加坡</option>
+              <option value="dashscope-cn">千问 / 阿里云百炼（国内）</option>
+              <option value="custom">自定义朗读接口</option>
+            </select>
+          </label>
+          <label>
+            <span>朗读 API 地址</span>
+            <input id="ttsBaseUrlInput" type="url" placeholder="https://dashscope-intl.aliyuncs.com" />
           </label>
           <label>
             <span>朗读模型</span>

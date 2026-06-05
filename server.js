@@ -16,8 +16,9 @@ const learningSeedPath = path.join(dataDir, 'learning.seed.json');
 const sessionCookieName = 'chinese_learning_session';
 const sessionTtlMs = 1000 * 60 * 60 * 24 * 30;
 const sessions = new Map();
-const defaultBaseUrl = process.env.OPENAI_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
-const defaultChatModel = process.env.CHAT_MODEL || process.env.OPENAI_MODEL || 'qwen-plus';
+const defaultBaseUrl = process.env.OPENAI_BASE_URL || 'https://superaiapi.com/v1';
+const defaultChatModel = process.env.CHAT_MODEL || process.env.OPENAI_MODEL || 'gpt-5.4-mini';
+const defaultTtsBaseUrl = process.env.TTS_BASE_URL || 'https://dashscope-intl.aliyuncs.com';
 const defaultTtsModel = process.env.TTS_MODEL || 'qwen3-tts-flash';
 const defaultQwenTtsVoice = process.env.QWEN_TTS_VOICE || 'Cherry';
 const defaultConfiguredUsername = normalizeUsername(process.env.DEFAULT_CONFIGURED_USER || process.env.OTIS_DEFAULT_USER || 'otis');
@@ -134,7 +135,7 @@ function getDefaultConfiguredUserSettings(user) {
     baseUrl: firstEnvValue('OTIS_BASE_URL', 'DEFAULT_USER_BASE_URL', 'OPENAI_BASE_URL'),
     chatModel: firstEnvValue('OTIS_CHAT_MODEL', 'DEFAULT_USER_CHAT_MODEL', 'CHAT_MODEL'),
     ttsApiKey: firstEnvValue('OTIS_TTS_API_KEY', 'DEFAULT_USER_TTS_API_KEY', 'DASHSCOPE_API_KEY'),
-    ttsBaseUrl: firstEnvValue('OTIS_TTS_BASE_URL', 'DEFAULT_USER_TTS_BASE_URL'),
+    ttsBaseUrl: firstEnvValue('OTIS_TTS_BASE_URL', 'DEFAULT_USER_TTS_BASE_URL', 'TTS_BASE_URL'),
     ttsModel: firstEnvValue('OTIS_TTS_MODEL', 'DEFAULT_USER_TTS_MODEL', 'TTS_MODEL'),
     ttsSpeed: firstEnvValue('OTIS_TTS_SPEED', 'DEFAULT_USER_TTS_SPEED', 'TTS_SPEED'),
   };
@@ -147,8 +148,8 @@ function getUserApiSettings(user) {
     chatApiKey: String(user?.chatApiKey || user?.apiKey || defaults.chatApiKey || defaults.apiKey || '').trim(),
     baseUrl: String(user?.baseUrl || defaults.baseUrl || defaultBaseUrl).trim(),
     chatModel: String(user?.chatModel || defaults.chatModel || defaultChatModel).trim(),
-    ttsApiKey: String(user?.ttsApiKey || defaults.ttsApiKey || user?.chatApiKey || user?.apiKey || defaults.chatApiKey || defaults.apiKey || '').trim(),
-    ttsBaseUrl: String(user?.ttsBaseUrl || defaults.ttsBaseUrl || user?.baseUrl || defaults.baseUrl || defaultBaseUrl).trim(),
+    ttsApiKey: String(user?.ttsApiKey || defaults.ttsApiKey || '').trim(),
+    ttsBaseUrl: String(user?.ttsBaseUrl || defaults.ttsBaseUrl || defaultTtsBaseUrl).trim(),
     ttsModel: String(user?.ttsModel || defaults.ttsModel || defaultTtsModel).trim(),
     ttsSpeed: Math.min(2, Math.max(0.5, Number(user?.ttsSpeed || defaults.ttsSpeed || 0.85))),
   };
@@ -526,6 +527,7 @@ app.get('/api/health', (req, res) => {
     chatModel: settings.chatModel,
     ttsModel: settings.ttsModel,
     ttsSpeed: settings.ttsSpeed,
+    ttsBaseUrl: settings.ttsBaseUrl,
     baseUrl: settings.baseUrl,
   });
 });
@@ -537,10 +539,14 @@ app.post('/api/settings', async (req, res) => {
     const chatApiKey = String(req.body.chatApiKey || '').trim() || currentSettings.chatApiKey || apiKey;
     const baseUrl = String(req.body.baseUrl || currentSettings.baseUrl || defaultBaseUrl).trim();
     const chatModel = String(req.body.chatModel || currentSettings.chatModel || defaultChatModel).trim();
-    const ttsApiKey = String(req.body.ttsApiKey || '').trim() || currentSettings.ttsApiKey || chatApiKey;
-    const ttsBaseUrl = String(req.body.ttsBaseUrl || currentSettings.ttsBaseUrl || baseUrl).trim();
+    const ttsApiKey = String(req.body.ttsApiKey || '').trim() || currentSettings.ttsApiKey;
+    const ttsBaseUrl = String(req.body.ttsBaseUrl || currentSettings.ttsBaseUrl || defaultTtsBaseUrl).trim();
     const ttsModel = String(req.body.ttsModel || currentSettings.ttsModel || defaultTtsModel).trim();
     const ttsSpeed = Math.min(2, Math.max(0.5, Number(req.body.ttsSpeed || currentSettings.ttsSpeed || 0.85)));
+
+    if (ttsBaseUrl && !/^https?:\/\//i.test(ttsBaseUrl)) {
+      return res.status(400).json({ error: 'TTS API URL must start with http:// or https://.' });
+    }
 
     if (!chatApiKey) {
       return res.status(400).json({ error: '请输入 API key。' });
